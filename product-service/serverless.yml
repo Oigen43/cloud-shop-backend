@@ -1,0 +1,32 @@
+service:
+  name: cloud-shop
+
+frameworkVersion: '2'
+
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+functions:
+  getAllProducts:
+    handler: index.getAllProducts
+    events:
+      - http:
+          path: products
+          method: get
+          cors: true
+
+  getProductById:
+    handler: index.getProductById
+    events:
+      - http:
+          path: products/{productId}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                productId: true
