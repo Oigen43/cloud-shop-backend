@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const slsw = require('serverless-webpack');
 
 module.exports = {
@@ -35,6 +36,13 @@ module.exports = {
           },
         ],
       },
+      {
+        test: /\.sql$/i,
+        use: { loader: 'raw-loader' },
+      },
     ],
   },
+  plugins: [
+    new webpack.IgnorePlugin(/^pg-native$/)
+  ]
 };
