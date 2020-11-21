@@ -1,5 +1,5 @@
 import { createClient } from '../../db/connection';
-import { response } from "../../utils";
+import { response } from '../../utils';
 
 import query from './get-all-products.sql';
 
