@@ -4,15 +4,23 @@ service:
 frameworkVersion: '2'
 
 plugins:
+  - serverless-dotenv-plugin
   - serverless-webpack
 
 provider:
   name: aws
   runtime: nodejs12.x
+  stage: dev
+  environment:
+    SQS_URL: ${cf:product-service-${self:provider.stage}.SQSQueueUrl}
   iamRoleStatements:
     - Effect: "Allow"
       Action: "s3:*"
       Resource: "arn:aws:s3:::import-products/*"
+    - Effect: 'Allow'
+      Action: 'sqs:*'
+      Resource:
+        - '${cf:product-service-${self:provider.stage}.SQSQueueArn}'
 
 functions:
   importProductsFile:

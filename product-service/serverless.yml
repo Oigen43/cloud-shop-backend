@@ -1,5 +1,5 @@
 service:
-  name: cloud-shop
+  name: product-service
 
 frameworkVersion: '2'
 
@@ -10,6 +10,58 @@ plugins:
 provider:
   name: aws
   runtime: nodejs12.x
+  stage: dev
+  environment:
+    SNS_ARN:
+      Ref: SNSTopic
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action: 'sqs:*'
+      Resource:
+        - Fn::GetAtt: [ SQSQueue, Arn ]
+    - Effect: 'Allow'
+      Action: 'sns:*'
+      Resource:
+        Ref: SNSTopic
+
+resources:
+  Resources:
+    SQSQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalogItemsQueue.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
+        ReceiveMessageWaitTimeSeconds: 20
+    SNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: catalogItemsNotificationTopic
+    SNSSubscriptionSuccess:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: zhenyacher43@gmail.com
+        Protocol: email
+        FilterPolicy:
+          isImportFailed: ['false']
+        TopicArn:
+          Ref: SNSTopic
+    SNSSubscriptionFail:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: oigen43@icloud.com
+        Protocol: email
+        FilterPolicy:
+          isImportFailed: ['true']
+        TopicArn:
+          Ref: SNSTopic
+  Outputs:
+    SQSQueueUrl:
+      Value:
+        Ref: SQSQueue
+    SQSQueueArn:
+      Value:
+        Fn::GetAtt: [ SQSQueue, Arn ]
 
 functions:
   getAllProducts:
@@ -38,3 +90,12 @@ functions:
           path: products
           method: post
           cors: true
+  catalogBatchProcess:
+    handler: index.catalogBatchProcess
+    events:
+      - sqs:
+          batchSize: 5
+          arn:
+            Fn::GetAtt:
+              - SQSQueue
+              - Arn
